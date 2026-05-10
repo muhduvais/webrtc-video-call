@@ -18,4 +18,26 @@ const io = new Server(server, {
     }
 });
 
+io.on('connection', (socket) => {
+    console.log('User connected: ', socket.id);
+
+    socket.on('join-room', (roomId) => {
+        socket.join(roomId);
+joined
+        socket.to(roomId).emit('user-joined');
+    });
+
+    socket.on('offer', (offer) => {
+        socket.broadcast.emit('offer', offer);
+    });
+
+    socket.on('answer', (answer) => {
+        socket.broadcast.emit('answer', answer);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected: ', socket.id);
+    });
+});
+
 server.listen(process.env.PORT, () => console.log('Server running on port 5000'));

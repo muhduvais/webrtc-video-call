@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { socket } from "./socket";
 import "./App.css";
 
 function App() {
@@ -33,15 +34,44 @@ function App() {
           peerConnection.current?.addTrack(track, stream);
         });
 
-        // generates SDP and setup local description to send the data based on those specific configs
-        const offer = await peerConnection.current?.createOffer();
-        await peerConnection.current?.setLocalDescription(offer);
+        socket.emit("join-room", "room-1");
+
+        // listen for user-join
+        socket.on("user-joined", async () => {
+          console.log("Another user joined");
+
+          // generates SDP and setup local description to send the data based on those specific configs
+          const offer = await peerConnection.current?.createOffer();
+          await peerConnection.current?.setLocalDescription(offer);
+
+          // sends an offer
+          socket.emit("offer", offer);
+        });
+
+        // receive offer and create answer - set offer as remote description
+        socket.on('offer', async (offer) => {
+          console.log('Offer received');
+
+          await peerConnection.current?.setRemoteDescription(offer);
+
+          const answer = await peerConnection.current?.createAnswer();
+          
+          await peerConnection.current?.setLocalDescription(answer);
+
+          socket.emit('answer', answer);
+        });
+
+        // receive answer and set it as remote description
+        socket.on('answer', async (answer) => {
+          console.log('Answer received');
+
+          await peerConnection.current?.setRemoteDescription(answer);
+        });
 
         // stream the video on screen
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        
       } catch (error) {
         console.log(error);
       }
