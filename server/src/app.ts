@@ -18,18 +18,4 @@ const io = new Server(server, {
     }
 });
 
-io.on('connection', (socket) => {
-    console.log('User connected: ', socket.id);
-
-    socket.on('disconnect', () => {
-        console.log('User disconnected: ', socket.id);
-    });
-
-    socket.on('message', (data) => {
-        socket.broadcast.emit('message', data);
-
-        console.log(data);
-    });
-});
-
 server.listen(process.env.PORT, () => console.log('Server running on port 5000'));
