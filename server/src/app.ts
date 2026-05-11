@@ -35,6 +35,10 @@ io.on('connection', (socket) => {
         socket.to('room-1').emit('answer', answer);
     });
 
+    socket.on('ice-candidate', (candidate) => {
+        socket.to('room-1').emit('ice-candidate', candidate);
+    })
+
     socket.on('disconnect', () => {
         console.log('User disconnected: ', socket.id);
     });

@@ -18,8 +18,21 @@ function App() {
 
     // collect ICE candidates
     peerConnection.current.onicecandidate = (event) => {
-      console.log("ICE Candidate: ", event.candidate);
+      console.log("Sending ICE candidates...");
+
+      socket.emit('ice-candidate', event.candidate);
     };
+
+    // start streaming video using the html video element
+    peerConnection.current.ontrack = (event) => {
+      console.log('Remote track received');
+
+      const remoteVideo = document.getElementById('remote-video') as HTMLVideoElement;
+
+      if (remoteVideo) {
+        remoteVideo.srcObject = event.streams[0];
+      }
+    }
 
     const startVideo = async () => {
       try {
@@ -46,6 +59,7 @@ function App() {
 
           // sends an offer
           socket.emit("offer", offer);
+          console.log('Sent offer ');
         });
 
         // receive offer and create answer - set offer as remote description
@@ -59,6 +73,7 @@ function App() {
           await peerConnection.current?.setLocalDescription(answer);
 
           socket.emit('answer', answer);
+          console.log('Sent answer')
         });
 
         // receive answer and set it as remote description
@@ -67,6 +82,16 @@ function App() {
 
           await peerConnection.current?.setRemoteDescription(answer);
         });
+
+        socket.on('ice-candidate', async (candidate) => {
+          console.log('ICE candidate received');
+
+          try {
+            await peerConnection.current?.addIceCandidate(candidate);
+          } catch (error) {
+            console.log(error);
+          }
+        })
 
         // stream the video on screen
         if (videoRef.current) {
@@ -90,6 +115,16 @@ function App() {
           autoPlay
           playsInline
           muted
+          style={{
+            width: "600px",
+            border: "1px solid black",
+          }}
+        />
+
+        <video
+          id="remote-video"
+          autoPlay
+          playsInline
           style={{
             width: "600px",
             border: "1px solid black",
