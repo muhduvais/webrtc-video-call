@@ -37,9 +37,16 @@ io.on('connection', (socket) => {
 
     socket.on('ice-candidate', (candidate) => {
         socket.to('room-1').emit('ice-candidate', candidate);
+    });
+
+    socket.on('leave-room', (roomId) => {
+        console.log('User left room: ', roomId);
+        socket.to(roomId).emit('user-left');
+        socket.leave(roomId);
     })
 
     socket.on('disconnect', () => {
+        socket.to("room-1").emit("user-left");
         console.log('User disconnected: ', socket.id);
     });
 });
